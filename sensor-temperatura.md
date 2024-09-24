@@ -2,6 +2,7 @@ Para facilitar o seu trabalho já existe uma bilioteca que pode ser baixada nest
 
 Agora acesse Examples->DHT->DHTtester em sua IDE Arduino
 
+https://www.makerhero.com/blog/monitorando-temperatura-e-umidade-com-o-sensor-dht11/
 https://github.com/adafruit/DHT-sensor-library
 
 #include "DHT.h"
