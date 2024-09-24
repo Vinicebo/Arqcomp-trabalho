@@ -99,7 +99,7 @@ void lerDistancia() {
   Serial.println(distancia);
 }
 
-void lerPresenca(){
+void lerLuz(){
 
 }
 
@@ -163,7 +163,7 @@ void loop() {
     }
 
     if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0)) {
-      lerPresenca();
+      lerLuz();
     }
 
     if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 1)) {
@@ -198,21 +198,89 @@ void loop() {
   if (modo == 1) {
     String comando;
 
-    Serial.println("Modo de programação ativado. Insira seu comando.");
-
     while (Serial.available() == 0) {
 
     }
 
     comando = Serial.readString();
-    Serial.println(comando);
+    comando.trim();
 
-    if (comando == "LED_ON A") {
-      ligarLed(ledA);
-    }
+    if (comando == "INICIO_PROG") {
+      while (comndo != "FIM_PROG") {
+        while (Serial.available() == 0) {
 
-    else {
-    Serial.println("Comando inválido.");
+        }
+
+        comando = Serial.readString();
+        comando.trim();
+        Serial.println(comando);
+
+
+        if (comando == "LED_ON A") {
+          ligarLed(ledA);
+        }
+
+        if (comando == "LED_OFF A") {
+          desligarLed(ledA);
+        }
+        
+        if (comando == "LED_ON B") {
+          ligarLed(ledB);
+        }
+        
+        if (comando == "LED_OFF B") {
+          desligarLed(ledB);
+        }
+        
+        if (comando == "BUZZ_ON") {
+          ligarBuzzer();
+        }
+        
+        if (comando == "BUZZ_OFF") {
+          desligarBuzzer();
+        }
+        
+        if (comando == "TEMP_READ A") {
+          lerTemperatura();
+        }
+        
+        if (comando == "DIST_CHECK A") {
+          lerDistancia();
+        }
+        
+        if (comando == "PRES_READ A") {
+          lerLuz();
+        }
+        
+        if (comando == "RGB_SET_COLOR A RED") {
+          ligarVermelhoRGB();
+        }
+        
+        if (comando == "RGB_SET_COLOR A GREEN") {
+          ligarVerdeRGB();
+        }
+        
+        if (comando == "RGB_SET_COLOR A BLUE") {
+          ligarAzulRGB();
+        }
+        
+        if (comando == "FIM_PROG") {
+          break;
+        }
+        
+        if (comando == "LED_ON C") {
+          ligarLed(ledC);
+        }
+        
+        if (comando == "LED_ON C") {
+          ligarLed(ledC);
+        }
+
+
+        else {
+        Serial.println("Comando inválido.");
+        }
+      }
     }
   }
   delay(1000);
