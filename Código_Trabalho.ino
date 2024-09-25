@@ -5,6 +5,13 @@ const int azul = 11;
 const int verde = 12;
 const int vermelho = 13;
 
+int ldr = A1;//Atribui A0 a variável ldr
+int valorldr = 0;//Declara a variável valorldr como inteiro
+
+const int LM35 = A0; // Define o pino que lera a saída do LM35
+#define LM35 A0
+float temperatura; // Variável que armazenará a temperatura medida
+
 int PinTrigger = 28; // Pino usado para disparar os pulsos do sensor
 int PinEcho = 30; // pino usado para ler a saida do sensor
 float TempoEcho = 0;
@@ -76,11 +83,13 @@ void ligarBuzzer() {
 }
 
 void desligarBuzzer() {
-  tone(buz, 0);
+  noTone(buz);
 }
 
 void lerTemperatura() {
-
+  temperatura = (float(analogRead(LM35))*5/(1023))/0.01;
+  Serial.println("Temperatura: ");
+  Serial.println(temperatura);
 }
 
 void lerDistancia() {
@@ -100,7 +109,9 @@ void lerDistancia() {
 }
 
 void lerLuz(){
-
+  valorldr=analogRead(ldr);//Lê o valor do sensor ldr e armazena na variável valorldr
+  Serial.print("Valor lido pelo LDR = ");//Imprime na serial a mensagem Valor lido pelo LDR
+  Serial.println(valorldr);//Imprime na serial os dados de valorldr
 }
 
 void setup() {
@@ -112,6 +123,7 @@ void setup() {
   pinMode(ledB, OUTPUT);
   pinMode(ledC, OUTPUT);
   pinMode(buz, OUTPUT);
+  pinMode(ldr, INPUT);//Define ldr como saída
 
   // Configura pino de Trigger como saída e inicializa com nível baixo
   pinMode(PinTrigger, OUTPUT);
@@ -121,77 +133,110 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int BIT1, BIT2, BIT3, BIT4;
+  int BIT1, BIT2, BIT3, BIT4, ENTER;
   BIT1 = digitalRead(C1);
   BIT2 = digitalRead(C2);
   BIT3 = digitalRead(C3);
   BIT4 = digitalRead(C4);
+  ENTER = digitalRead(enter);
 
   int modo = digitalRead(C_modo);
+  Serial.println("BIT1");
+  Serial.println(BIT1);
+  Serial.println("BIT2");
+  Serial.println(BIT2);
+  Serial.println("BIT3");
+  Serial.println(BIT3);
+  Serial.println("BIT4");
+  Serial.println(BIT4);
+  Serial.println("ENTER");
+  Serial.println(ENTER);
+  Serial.println("modo");
+  Serial.println(modo);
 
   if (modo == 0) {
-    if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0)) {
-      ligarLed(ledA);
-    }
+    if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+      while (!((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1))) {
+        BIT1 = digitalRead(C1);
+        BIT2 = digitalRead(C2);
+        BIT3 = digitalRead(C3);
+        BIT4 = digitalRead(C4);
+        ENTER = digitalRead(enter);
+        Serial.println("BIT1");
+        Serial.println(BIT1);
+        Serial.println("BIT2");
+        Serial.println(BIT2);
+        Serial.println("BIT3");
+        Serial.println(BIT3);
+        Serial.println("BIT4");
+        Serial.println(BIT4);
+        Serial.println("ENTER");
+        Serial.println(ENTER);
+        if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+          ligarLed(ledA);
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 1)) {
-      desligarLed(ledA);
-    }
+        if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
+          desligarLed(ledA);
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 0)) {
-      ligarLed(ledB);
-    }
+        if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 0) && (ENTER == 1)) {
+          ligarLed(ledB);
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 1)) {
-      desligarLed(ledB);
-    }
+        if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 1) && (ENTER == 1)) {
+          desligarLed(ledB);
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0)) {
-      ligarBuzzer();
-    }
+        if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+          ligarBuzzer();
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1)) {
-      desligarBuzzer();
-    }
+        if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
+          desligarBuzzer();
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 0)) {
-      lerTemperatura();
-    }
+        if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 0) && (ENTER == 1)) {
+          lerTemperatura();
+        }
 
-    if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 1)) {
-      lerDistancia();
-    }
+        if ((BIT1 == 0) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 1) && (ENTER == 1)) {
+          lerDistancia();
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0)) {
-      lerLuz();
-    }
+        if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+          lerLuz();
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 1)) {
-      ligarVermelhoRGB();
-    }
+        if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
+          ligarVermelhoRGB();
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 0)) {
-      ligarVerdeRGB();
-    }
+        if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 0) && (ENTER == 1)) {
+          ligarVerdeRGB();
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 1)) {
-      ligarAzulRGB();
-    }
+        if ((BIT1 == 1) && (BIT2 == 0) && (BIT3 == 1) && (BIT4 == 1) && (ENTER == 1)) {
+          ligarAzulRGB();
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0)) {
-      ;
-    }
+        if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+          ;
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1)) {
-      ;
-    }
+        if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
+          ;
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 0)) {
-      ligarLed(ledC);
-    }
+        if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 0) && (ENTER == 1)) {
+          ligarLed(ledC);
+        }
 
-    if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 1)) {
-      desligarLed(ledC);
+        if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 1) && (ENTER == 1)) {
+          desligarLed(ledC);
+        }
+        delay(1000);
+      }
     }
   }
 
@@ -206,7 +251,9 @@ void loop() {
     comando.trim();
 
     if (comando == "INICIO_PROG") {
-      while (comndo != "FIM_PROG") {
+      while (comando != "FIM_PROG") {
+        Serial.println("Modo assembly ativado");
+
         while (Serial.available() == 0) {
 
         }
@@ -272,14 +319,10 @@ void loop() {
           ligarLed(ledC);
         }
         
-        if (comando == "LED_ON C") {
-          ligarLed(ledC);
+        if (comando == "LED_OFF C") {
+          desligarLed(ledC);
         }
 
-
-        else {
-        Serial.println("Comando inválido.");
-        }
       }
     }
   }
