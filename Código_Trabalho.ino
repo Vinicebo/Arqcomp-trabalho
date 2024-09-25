@@ -54,21 +54,21 @@ void ligarLed(int led) {
 
 
 void ligarVermelhoRGB() {
-  digitalWrite(azul, LOW);
-  digitalWrite(verde, LOW);
-  digitalWrite(vermelho, HIGH);
+  digitalWrite(azul, HIGH);
+  digitalWrite(verde, HIGH);
+  digitalWrite(vermelho, LOW);
 }
 
 void ligarAzulRGB() {
-  digitalWrite(azul, HIGH);
-  digitalWrite(verde, LOW);
-  digitalWrite(vermelho, LOW);
+  digitalWrite(azul, LOW);
+  digitalWrite(verde, HIGH);
+  digitalWrite(vermelho, HIGH);
 }
 
 void ligarVerdeRGB() {
-  digitalWrite(azul, LOW);
-  digitalWrite(verde, HIGH);
-  digitalWrite(vermelho, LOW);
+  digitalWrite(azul, HIGH);
+  digitalWrite(verde, LOW);
+  digitalWrite(vermelho, HIGH);
 }
 
 void ligarBuzzer() {
