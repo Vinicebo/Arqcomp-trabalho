@@ -1,14 +1,14 @@
 // Buzzer não precisa de resistor
-//Led RGB
 
+//Led RGB
 const int azul = 11;
 const int verde = 12;
 const int vermelho = 13;
 
-int ldr = A1;//Atribui A0 a variável ldr
-int valorldr = 0;//Declara a variável valorldr como inteiro
+int ldr = A1;
+int valorldr = 0;
 
-const int LM35 = A0; // Define o pino que lera a saída do LM35
+const int LM35 = A0; // Define o pino que lerá a saída do LM35
 #define LM35 A0
 float temperatura; // Variável que armazenará a temperatura medida
 
@@ -30,9 +30,6 @@ const float VelocidadeSom_mporus = 0.000340; // em metros por microsegundo
 
 //Buzzer
 #define buz 9
-
-// Sensor de temperatura
-#define temp A0
 
 //Chaves Binárias
 
@@ -93,8 +90,8 @@ void lerTemperatura() {
 }
 
 void lerDistancia() {
-  // Para fazer o HC-SR04 enviar um pulso ultrassonico, nos temos
-  // que enviar para o pino de trigger um sinal de nivel alto
+  // Para fazer o HC-SR04 enviar um pulso ultrassonico, nós temos
+  // que enviar para o pino de trigger um sinal de nível alto
   // com pelo menos 10us de duraçao
   digitalWrite(PinTrigger, HIGH);
   delayMicroseconds(10);
@@ -123,7 +120,7 @@ void setup() {
   pinMode(ledB, OUTPUT);
   pinMode(ledC, OUTPUT);
   pinMode(buz, OUTPUT);
-  pinMode(ldr, INPUT);//Define ldr como saída
+  pinMode(ldr, INPUT);
 
   // Configura pino de Trigger como saída e inicializa com nível baixo
   pinMode(PinTrigger, OUTPUT);
@@ -141,37 +138,18 @@ void loop() {
   ENTER = digitalRead(enter);
 
   int modo = digitalRead(C_modo);
-  Serial.println("BIT1");
-  Serial.println(BIT1);
-  Serial.println("BIT2");
-  Serial.println(BIT2);
-  Serial.println("BIT3");
-  Serial.println(BIT3);
-  Serial.println("BIT4");
-  Serial.println(BIT4);
-  Serial.println("ENTER");
-  Serial.println(ENTER);
-  Serial.println("modo");
-  Serial.println(modo);
 
   if (modo == 0) {
     if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
+      Serial.println("Modo binário ativado");
+
       while (!((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1))) {
         BIT1 = digitalRead(C1);
         BIT2 = digitalRead(C2);
         BIT3 = digitalRead(C3);
         BIT4 = digitalRead(C4);
         ENTER = digitalRead(enter);
-        Serial.println("BIT1");
-        Serial.println(BIT1);
-        Serial.println("BIT2");
-        Serial.println(BIT2);
-        Serial.println("BIT3");
-        Serial.println(BIT3);
-        Serial.println("BIT4");
-        Serial.println(BIT4);
-        Serial.println("ENTER");
-        Serial.println(ENTER);
+
         if ((BIT1 == 0) && (BIT2 == 0) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
           ligarLed(ledA);
         }
@@ -220,12 +198,8 @@ void loop() {
           ligarAzulRGB();
         }
 
-        if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 0) && (ENTER == 1)) {
-          ;
-        }
-
         if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
-          ;
+          break;
         }
 
         if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 1) && (BIT4 == 0) && (ENTER == 1)) {
@@ -251,8 +225,9 @@ void loop() {
     comando.trim();
 
     if (comando == "INICIO_PROG") {
+      Serial.println("Modo assembly ativado");
+
       while (comando != "FIM_PROG") {
-        Serial.println("Modo assembly ativado");
 
         while (Serial.available() == 0) {
 
@@ -260,6 +235,7 @@ void loop() {
 
         comando = Serial.readString();
         comando.trim();
+        Serial.println("Comando utilizado:");
         Serial.println(comando);
 
 
@@ -270,55 +246,55 @@ void loop() {
         if (comando == "LED_OFF A") {
           desligarLed(ledA);
         }
-        
+
         if (comando == "LED_ON B") {
           ligarLed(ledB);
         }
-        
+
         if (comando == "LED_OFF B") {
           desligarLed(ledB);
         }
-        
+
         if (comando == "BUZZ_ON") {
           ligarBuzzer();
         }
-        
+
         if (comando == "BUZZ_OFF") {
           desligarBuzzer();
         }
-        
+
         if (comando == "TEMP_READ A") {
           lerTemperatura();
         }
-        
+
         if (comando == "DIST_CHECK A") {
           lerDistancia();
         }
-        
+
         if (comando == "PRES_READ A") {
           lerLuz();
         }
-        
+
         if (comando == "RGB_SET_COLOR A RED") {
           ligarVermelhoRGB();
         }
-        
+
         if (comando == "RGB_SET_COLOR A GREEN") {
           ligarVerdeRGB();
         }
-        
+
         if (comando == "RGB_SET_COLOR A BLUE") {
           ligarAzulRGB();
         }
-        
+
         if (comando == "FIM_PROG") {
           break;
         }
-        
+
         if (comando == "LED_ON C") {
           ligarLed(ledC);
         }
-        
+
         if (comando == "LED_OFF C") {
           desligarLed(ledC);
         }
