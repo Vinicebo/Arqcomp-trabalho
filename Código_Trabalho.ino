@@ -2,7 +2,7 @@
 // Vinícius da luz - 202402159216 - TA
 // Eduardo Barros Peruzzo - 202401000833 - TA
 // Pedro dos Santos Carlos da Silva - 202401000493 - TA
-// Gabriel
+// Gabriel Corrêa da Silveira - 202401639702 - TA
 
 //Led RGB
 const int azul = 11;
