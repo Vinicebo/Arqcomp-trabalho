@@ -1,6 +1,8 @@
 // Mateus de Macedo Coelho Sachinho - 202403184672 - TA
 // Vinícius da luz - 202402159216 - TA
-// Buzzer não precisa de resistor
+// Eduardo Barros Peruzzo - 202401000833 - TA
+// Pedro dos Santos Carlos da Silva - 202401000493 - TA
+// Gabriel
 
 //Led RGB
 const int azul = 11;
