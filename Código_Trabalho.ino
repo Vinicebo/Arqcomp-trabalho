@@ -1,5 +1,5 @@
-// Mateus de Macedo Coelho Sachinho - 202403184672 - Ta
-
+// Mateus de Macedo Coelho Sachinho - 202403184672 - TA
+// Vinícius da luz - 202402159216 - TA
 // Buzzer não precisa de resistor
 
 //Led RGB
