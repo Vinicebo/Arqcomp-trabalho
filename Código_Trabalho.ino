@@ -91,6 +91,11 @@ void lerTemperatura() {
   temperatura = (float(analogRead(LM35))*5/(1023))/0.01;
   Serial.println("Temperatura: ");
   Serial.println(temperatura);
+  // temperatura = (analogRead(sensorPin) * 0.0048828125 * 100); //VARIÁVEL RECEBE A TEMPERATURA MEDIDA
+  // Serial.print("Temperatura = "); //IMPRIME O TEXTO NA SERIAL
+  // Serial.print(temperatura); //IMPRIME NA SERIAL A TEMPERATURA MEDIDA
+  // Serial.println(" C"); //IMPRIME O TEXTO NA SERIAL
+  // Em caso de falha, tentar usar o sensor azul DHT11, buscar no site como usar ele
 }
 
 void lerDistancia() {
