@@ -46,7 +46,7 @@ const float VelocidadeSom_mporus = 0.000340; // em metros por microsegundo
 #define C4 5
 
 // Chave de "Enter"
-#define enter 22
+#define enter 23
 
 // Chave de seleção
 #define C_modo 24
@@ -89,13 +89,10 @@ void desligarBuzzer() {
 
 void lerTemperatura() {
   temperatura = (float(analogRead(LM35))*5/(1023))/0.01;
-  Serial.println("Temperatura: ");
-  Serial.println(temperatura);
-  // temperatura = (analogRead(sensorPin) * 0.0048828125 * 100); //VARIÁVEL RECEBE A TEMPERATURA MEDIDA
-  // Serial.print("Temperatura = "); //IMPRIME O TEXTO NA SERIAL
-  // Serial.print(temperatura); //IMPRIME NA SERIAL A TEMPERATURA MEDIDA
-  // Serial.println(" C"); //IMPRIME O TEXTO NA SERIAL
-  // Em caso de falha, tentar usar o sensor azul DHT11, buscar no site como usar ele
+  Serial.print("Temperatura = "); //IMPRIME O TEXTO NA SERIAL
+  Serial.print(temperatura); //IMPRIME NA SERIAL A TEMPERATURA MEDIDA
+  Serial.println(" C"); //IMPRIME O TEXTO NA SERIAL
+
 }
 
 void lerDistancia() {
@@ -208,6 +205,7 @@ void loop() {
         }
 
         if ((BIT1 == 1) && (BIT2 == 1) && (BIT3 == 0) && (BIT4 == 1) && (ENTER == 1)) {
+          Serial.println("Fim do modo binário");
           break;
         }
 
@@ -227,7 +225,10 @@ void loop() {
     String comando;
 
     while (Serial.available() == 0) {
-
+      modo = digitalRead(C_modo);
+      if (modo == 0) {
+        break;
+      }
     }
 
     comando = Serial.readString();
@@ -297,6 +298,7 @@ void loop() {
         }
 
         if (comando == "FIM_PROG") {
+          Serial.println("Fim do modo assembly");
           break;
         }
 
