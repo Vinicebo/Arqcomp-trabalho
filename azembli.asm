@@ -20,8 +20,8 @@ out DDRA, r16							; Configura todos os pinos de PORTA como entrada
 clr r16									; R16 como 0 para configurar os pinos como entrada
 out DDRB, r16							; Configura todos os pinos de PORTB como entrada
 
-ldi r18,0xFF							; R16 como FF para configurar os pinos como saída
-out DDRC, r18							; Configura todos os pinos de PORTC como saída
+ldi r16,0xFF							; R16 como FF para configurar os pinos como saída
+out DDRC, r16							; Configura todos os pinos de PORTC como saída
 
 inicio:
 	ldi aux,0x1b						; Carrega o valor de ESC no registrador aux (r17)
@@ -86,11 +86,11 @@ escrever_dado:
 	leitura:
 		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r10)
 		cp entrada,aux					; Compara o registrador entrada (r10) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq ler_comando				; Se for <ESC>, interrompe a leitura e retorna para ler_comando | Se o registrador entrada (r10) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		breq ler_comando				; Se o registrador entrada (r10) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
-			ldi r26, 0x01				
-			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x202
+			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
+			ldi r26, 0x01
 
 			loopVerificar:
 				ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
@@ -103,13 +103,33 @@ escrever_dado:
 
 			valido:
 				st y,entrada			; Armazena o valor lido no endereço apontado por Y
+				out portc,entrada		; Apresenta operação na porta de saída
 				cp r28,aux2				; Compara a parte baixa de Y com 0xFF para verificar o limite de memória
 				breq ler_comando		; Se o limite for atingido, retorna para ler_comando
 				inc r28					; Incrementa a parte baixa do ponteiro Y
 				rjmp leitura			; Continua lendo o próximo valor
 
 total_tabela:
-    
+	ldi r27, 0x03						; O ponteiro x começará a partir do endereço de memória 0x300
+    ldi r26, 0x00
+
+	ldi contador,0x00
+
+	loopContar:
+		ld valor,x						; Carrega o valor do endereço atual de X para o registrador valor (r19)
+		inc r26
+		cpi valor,0x00					; Compara o valor do endereço x com 0x00 (fim da tabela), caso seja, termina a contagem
+		breq resultado
+		cpi valor,0x20
+		breq loopContar					; Compara o valor do endereço x com 0x20 (espaço em branco), caso seja, pula esse valor
+		inc contador
+		rjmp loopContar
+
+	resultado:
+		sts 0x401,contador
+		out portc,contador				; Apresenta operação na porta de saída
+
+		rjmp ler_comando
 
 contar_char:
     
