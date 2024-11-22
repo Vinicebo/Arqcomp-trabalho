@@ -13,7 +13,7 @@
 .def contador = r20
 .def aux2 = r21
 .def flag3 = r22
-.def flag4 = r24
+.def flag3 = r24
 
 clr r16									; R16 como 0 para configurar os pinos como entrada
 out DDRA, r16							; Configura todos os pinos de PORTA como entrada
@@ -24,7 +24,7 @@ out DDRB, r16							; Configura todos os pinos de PORTB como entrada
 ldi r16,0xFF							; R16 como FF para configurar os pinos como saída
 out DDRC, r16							; Configura todos os pinos de PORTC como saída
 
-; ================================== CRIANDO TABELA ASCII =========================================================================
+; ================================== CRIANDO TABELA ASCII =============================================================================
 inicio:
 	ldi aux,0x1b						; Carrega o valor de ESC no registrador aux (r17)
 	sts 0x200,aux						; Armazena o valor ESC (que está no registrador aux) no endereço de memória 
@@ -64,14 +64,14 @@ inicio:
 		cp contador,flag				; Compara o registrador contador (r20) (atualmente 1) com o registrador flag (r16) (10)
 		brne loop_digitos				; Continua o loop se o registrador contador (r20) não ficou igual ao registrador flag (r16) (10)
 
-; ================================== CRIANDO TABELA ASCII =========================================================================
-
-
-; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
 ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como comando para iniciar a escrita de dados
 ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
 ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
 
+; ================================== CRIANDO TABELA ASCII =============================================================================
+
+
+; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =========================================================
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
     cp r0,flag							; Compara o registrador r0 com o registrador flag (r16) (0x1c)
@@ -82,7 +82,7 @@ ler_comando:
     breq contar_char					; Se o registrador r0 for igual ao registrador flag3 (r19) (0x1e), salta para contar_char
     rjmp ler_comando					; Se nenhum comando for reconhecido, salta para ler_comando
 
-; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
+; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =========================================================
 
 
 ; ================================== CRIAÇÃO DA TABELA DE SEQUÊNCIA DE CARACTERES =====================================================
@@ -94,103 +94,101 @@ escrever_dado:
     ldi aux2,0xff						; Carrega o valor 0xFF no registrador aux2 (r21), usado para verificar o limite do espaço de memória
 
 	leitura:
-		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
-		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq criaTabelaF				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r10)
+		cp entrada,aux					; Compara o registrador entrada (r10) com ao registrador aux (r17) (0x1b) (<ESC>)
+		breq ler_comando				; Se o registrador entrada (r10) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
-			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
-			ldi r26, 0x01
+			ldi r27, 0x02				
+			ldi r26, 0x01				; O ponteiro x começará a partir do endereço de memória 0x201
 
 			loopVerificar:
 				ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
-				cpi valor,0x00			; Compara o valor carregado com 0x00 (fim da tabela)
-				breq leitura			; Se for 0x00, volta para leitura
-				cp valor,entrada		; Compara o valor lido com o valor atual da tabela
-				breq valido				; Se o valor for válido, salta para a rotina valido
-				inc r26					; Incrementa a parte baixa do ponteiro X
-				rjmp loopVerificar		; Continua verificando o próximo valor na tabela
+				cpi valor,0x00			; Compara o registrador valor (r19) com o valor 0x00 (fim da tabela)
+				breq leitura			; Se o registrador valor (r19) for igual ao valor 0x00 (fim da tabela), salta para leitura
+				cp valor,entrada		; Compara o registrador valor (r19) com o valor atual do registrador entrada (r10)
+				breq valido				; Se o registrador valor (r19) for igual ao valor atual do registrador entrada (r10), salta para valido
+				inc r26					; Incrementa a parte baixa do ponteiro X em 1
+				rjmp loopVerificar		; salta para loopVerificar
 
 			valido:
-				st y,entrada			; Armazena o valor lido no endereço apontado por Y
-				out portc,entrada		; Apresenta operação na porta de saída
-				cp r28,aux2				; Compara a parte baixa de Y com 0xFF para verificar o limite de memória
-				breq criaTabelaF		; Se o limite for atingido, retorna para ler_comando
-				inc r28					; Incrementa a parte baixa do ponteiro Y
-				rjmp leitura			; Continua lendo o próximo valor
+				st y,entrada			; Armazena o valor do registrador entrada (r10) no endereço apontado por y
+				out portc,entrada		; Apresenta o valor do registrador entrada (r10) na portc
+				cp r28,aux2				; Compara a parte baixa de Y com o registrador aux2 (r21)(0xFF) para verificar o limite de memória
+				breq ler_comando		; Se a parte baixa de Y ser igual ao registrador aux2 (r21)(0xFF), salta para ler_comando
+				inc r28					; Incrementa a parte baixa do ponteiro Y em 1
+				rjmp leitura			; salta para leitura 
 
 ; ================================== CRIAÇÃO DA TABELA DE SEQUÊNCIA DE CARACTERES =====================================================
 
 
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 total_tabela:
-	ldi r27, 0x03						; O ponteiro x começará a partir do endereço de memória 0x300
-    ldi r26, 0x00
-
-	ldi contador,0x00
+	ldi r27, 0x03						
+    ldi r26, 0x00						; O ponteiro x começará a partir do endereço de memória 0x300
+	ldi contador,0x00					; Carrega o registrador contador (r20) com 0x00 (fim da tabela)
 
 	loopContar:
 		ld valor,x						; Carrega o valor do endereço atual de X para o registrador valor (r19)
-		inc r26
+		inc r26							; Incrementa o valor do registrador r26 em 1
 		cpi valor,0x00					; Compara o valor do endereço x com 0x00 (fim da tabela), caso seja, termina a contagem
-		breq resultado
-		cpi valor,0x20
-		breq loopContar					; Compara o valor do endereço x com 0x20 (espaço em branco), caso seja, pula esse valor
-		inc contador
-		rjmp loopContar
+		breq resultado					; Se o valor do endereço x for igual a 0x00 (fim da tabela), salta para resultado
+		cpi valor,0x20					; Compara o valor do endereço x com 0x20 (espaço em branco)
+		breq loopContar					; Se o valor do endereço x for igual a 0x20 (espaço em branco), salta para loop contar
+		inc contador					; Incrementa o registrador contador (20) em 1
+		rjmp loopContar					; Salta para LoopContar
 
 	resultado:
-		sts 0x401,contador
-		out portc,contador				; Apresenta operação na porta de saída
+		sts 0x401,contador				; Armazena o valor do registrador contador (r20) no endereço 0x401
+		out portc,contador				; Escreve o valor do registrador contador (r20) na portc
 
-		rjmp ler_comando
-
+		rjmp ler_comando				; Salta para ler_comando
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 
 
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
-    in entrada,portb
+    in entrada,portb				
 
 	verificaChar2:
-		ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
-		ldi r26, 0x01
+		ldi r27, 0x02					
+		ldi r26, 0x01					; O ponteiro x começará a partir do endereço de memória 0x201
 
 		loopVerificar2:
-			ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
-			cpi valor,0x00			; Compara o valor carregado com 0x00 (fim da tabela)
-			breq contar_char		; Se for 0x00, volta para leitura
-			cpi entrada,0x20		; Compara o valor carregado com 0x00 (fim da tabela)
-			breq contar_char		; Se for 0x00, volta para leitura
-			cp valor,entrada		; Compara o valor lido com o valor atual da tabela
-			breq valido2			; Se o valor for válido, salta para a rotina valido
-			inc r26					; Incrementa a parte baixa do ponteiro X
-			rjmp loopVerificar2		; Continua verificando o próximo valor na tabela
+			ld valor,x					; Carrega o valor do endereço atual de X para o registrador valor (r19)
+			cpi valor,0x00				; Compara o registrador valor (r19) com o valor 0x00 (fim da tabela)
+			breq contar_char			; Se o registrador valor (r19) for igual ao valor 0x00 (fim da tabela), salta para conta_chat
+			cpi entrada,0x20			; Compara o valor do registrador entrada (r23) com 0x20 (espaço em branco)
+			breq contar_char			; Se o valor do registrador entrada (r23) for igual a 0x20 (espaço em branco), salta para conta_char
+			cp valor,entrada			; Compara o valor do endereço x com o registrador entrada (r23)
+			breq valido2				; Se o valor do endereço x for igual o registrador entrada (r23), salta para valido2
+			inc r26						; Incrementa a parte baixa do ponteiro X em 1
+			rjmp loopVerificar2			; Salta para loopVerificar2
 
 		valido2:
 			ldi r27,0x03
-			ldi r26,0x00
-			ldi contador,0x00
+			ldi r26,0x00				; O ponteiro x começará a partir do endereço de memória 0x300
+			ldi contador,0x00			; Carrega o contador (r20) com 0x00 (fim da tabela)
 
 			verificarTabela:
-				ld valor,x
-				inc r26
-				cp valor,entrada
-				breq igual
-				cpi valor,0x00
-				breq resultado2
-				rjmp verificarTabela
+				ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
+				inc r26					; Incrementa o valor (r19) em 1
+				cp valor,entrada		; Compara o endereço atual de X com o valor do registrador entrada (r23)
+				breq igual				; Se o valor do endereço x for igual o registrador entrada (r23), salta para igual
+				cpi valor,0x00			; Compara o endereço atual de X com 0x00 (fim da tabela)
+				breq resultado2			; Se o endereço atual de X for igal a 0x00 (fim da tabela), salta para resultado2
+				rjmp verificarTabela	; salta para verificarTabela
 
 			igual:
-				inc contador
-				rjmp verificarTabela
+				inc contador			; Incrementa o registrador (r20) em 1
+				rjmp verificarTabela	; Sallta para verificarTabela
 
 			resultado2:
 				sts 0x402,contador
-				out portc,contador				; Apresenta operação na porta de saída
+				out portc,contador		; Apresenta operação na porta de saída
 
-				rjmp ler_comando
+				rjmp ler_comando		; Salta para ler_comando
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 
@@ -291,4 +289,4 @@ criaTabelaF:
 
 
 fim:
-break            
+break                       
