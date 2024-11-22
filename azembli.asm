@@ -13,6 +13,7 @@
 .def contador = r20
 .def aux2 = r21
 .def flag3 = r22
+.def flag4 = r24
 
 clr r16									; R16 como 0 para configurar os pinos como entrada
 out DDRA, r16							; Configura todos os pinos de PORTA como entrada
@@ -63,14 +64,14 @@ inicio:
 		cp contador,flag				; Compara o registrador contador (r20) (atualmente 1) com o registrador flag (r16) (10)
 		brne loop_digitos				; Continua o loop se o registrador contador (r20) não ficou igual ao registrador flag (r16) (10)
 
-ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como comando para iniciar a escrita de dados
-ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
-ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
-
 ; ================================== CRIANDO TABELA ASCII =========================================================================
 
 
 ; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
+ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como comando para iniciar a escrita de dados
+ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
+ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
+
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
     cp r0,flag							; Compara o registrador r0 com o registrador flag (r16) (0x1c)
@@ -95,7 +96,7 @@ escrever_dado:
 	leitura:
 		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
 		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq ler_comando				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		breq criaTabelaF				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
 			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
@@ -114,7 +115,7 @@ escrever_dado:
 				st y,entrada			; Armazena o valor lido no endereço apontado por Y
 				out portc,entrada		; Apresenta operação na porta de saída
 				cp r28,aux2				; Compara a parte baixa de Y com 0xFF para verificar o limite de memória
-				breq ler_comando		; Se o limite for atingido, retorna para ler_comando
+				breq criaTabelaF		; Se o limite for atingido, retorna para ler_comando
 				inc r28					; Incrementa a parte baixa do ponteiro Y
 				rjmp leitura			; Continua lendo o próximo valor
 
@@ -192,6 +193,101 @@ contar_char:
 				rjmp ler_comando
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
+
+; ================================== CRIAÇÃO DA TABELA DE CARACTERES FREQUENTES =======================================================
+criaTabelaF:
+    ldi r26, 0x00                  ; Ponteiro X para 0x300 (parte baixa)
+    ldi r27, 0x03                  ; Ponteiro X para 0x300 (parte alta)
+
+    ldi r28, 0x03                  ; Ponteiro Y para tabela de frequências (parte baixa)
+    ldi r29, 0x04                  ; Ponteiro Y para tabela de frequências (parte alta)
+
+    clr contador                   ; Contador geral para frequências (zerado)
+    clr aux                        ; Auxiliar para comparações
+
+	contarFrequencias:
+		ld valor, x                    ; Lê o caractere do endereço atual de X
+		cpi valor, 0x00                ; Fim da tabela de sequência?
+		breq ordenarFrequencias        ; Se sim, vá para a ordenação
+
+		; Verifica se é um espaço em branco
+		cpi valor, 0x20
+		breq proximoCaractere
+
+		; Procura o caractere na tabela de frequências
+		ldi r30, 0x00                  ; Ponteiro Z para tabela de frequências (parte baixa)
+		ldi r31, 0x04                  ; Ponteiro Z para tabela de frequências (parte alta)
+
+	procurarTabela:
+		ld aux, z                      ; Lê o caractere atual da tabela de frequências
+		cpi aux, 0x00                  ; Tabela vazia ou fim dela?
+		breq adicionarNovo             ; Adicione o caractere à tabela
+
+		cp aux, valor                  ; Compara com o caractere atual
+		breq incrementarFrequencia     ; Se igual, incremente a frequência
+		adiw r30, 0x02                 ; Avança para o próximo caractere na tabela
+		rjmp procurarTabela
+
+	incrementarFrequencia:
+		ldd aux, z+1                   ; Carrega a frequência
+		inc aux                        ; Incrementa
+		std z+1, aux                   ; Salva a nova frequência
+		rjmp proximoCaractere
+
+	adicionarNovo:
+		st z, valor                    ; Armazena o novo caractere
+		ldi aux, 0x01                  ; Primeira ocorrência
+		std z+1, aux                   ; Armazena a frequência inicial
+		rjmp proximoCaractere
+
+	proximoCaractere:
+		adiw r26, 0x01                 ; Incrementa o ponteiro X
+		rjmp contarFrequencias
+
+	ordenarFrequencias:
+		ldi flag4, 0x0A                  ; Número de elementos (10)
+		clr aux                        ; Flag para monitorar trocas
+		ldi r17, 0x00                  ; Contador de trocas
+
+	bubbleSort:
+		clr aux                        ; Reseta flag de troca
+		ldi r30, 0x00                  ; Parte baixa do ponteiro Z
+		ldi r31, 0x04                  ; Parte alta do ponteiro Z
+
+	loopOrdenacao:
+		ldd valor, z+1                 ; Frequência atual
+		ldd aux2, z+3                  ; Próxima frequência
+		cp valor, aux2                 ; Compara frequências
+		brlo troca                     ; Se necessário, troque
+
+		adiw r30, 0x02                 ; Avança para o próximo par
+		dec flag4                      ; Reduz o contador
+		brne loopOrdenacao             ; Continua o loop
+
+		; Se nenhuma troca foi feita, terminamos
+		cpi r17,0x00                   ; Verifica se houve troca
+		breq fimOrdenacao              ; Se não houve troca, fim do sort
+		rjmp bubbleSort                ; Caso contrário, repita o sort
+
+	troca:
+		ld aux, z                     ; Salva caractere atual
+		ldd aux2, z+2                  ; Salva próximo caractere
+		st z, aux2                    ; Troca caracteres
+		std z+2, aux                   ; Troca caracteres
+
+		ldd aux, z+1                   ; Salva frequência atual
+		ldd aux2, z+3                  ; Salva próxima frequência
+		std z+1, aux2                  ; Troca frequências
+		std z+3, aux                   ; Troca frequências
+
+		ldi r17, 0x01                  ; Marca que houve troca
+		adiw r30, 0x02                 ; Avança para o próximo par
+		rjmp loopOrdenacao
+
+	fimOrdenacao:
+		rjmp ler_comando               ; Volta ao fluxo principal
+
+; ================================== CRIAÇÃO DA TABELA DE CARACTERES FREQUENTES =======================================================
 
 
 fim:
