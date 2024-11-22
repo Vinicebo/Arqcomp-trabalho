@@ -5,7 +5,7 @@
 ; Gabriel Corrêa da Silveira - 202401639702 - TA
 
 
-.def entrada = r10
+.def entrada = r23
 .def flag = r16
 .def aux = r17
 .def flag2 = r18
@@ -23,6 +23,7 @@ out DDRB, r16							; Configura todos os pinos de PORTB como entrada
 ldi r16,0xFF							; R16 como FF para configurar os pinos como saída
 out DDRC, r16							; Configura todos os pinos de PORTC como saída
 
+; ================================== CRIANDO TABELA ASCII =========================================================================
 inicio:
 	ldi aux,0x1b						; Carrega o valor de ESC no registrador aux (r17)
 	sts 0x200,aux						; Armazena o valor ESC (que está no registrador aux) no endereço de memória 
@@ -66,6 +67,10 @@ ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como
 ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
 ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
 
+; ================================== CRIANDO TABELA ASCII =========================================================================
+
+
+; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
     cp r0,flag							; Compara o registrador r0 com o registrador flag (r16) (0x1c)
@@ -76,6 +81,10 @@ ler_comando:
     breq contar_char					; Se o registrador r0 for igual ao registrador flag3 (r19) (0x1e), salta para contar_char
     rjmp ler_comando					; Se nenhum comando for reconhecido, salta para ler_comando
 
+; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
+
+
+; ================================== CRIAÇÃO DA TABELA DE SEQUÊNCIA DE CARACTERES =====================================================
 escrever_dado:
     ldi r29,0x03						
     ldi r28,0x00						; O ponteiro y começará a partir do endereço de memória 0x0300
@@ -84,9 +93,9 @@ escrever_dado:
     ldi aux2,0xff						; Carrega o valor 0xFF no registrador aux2 (r21), usado para verificar o limite do espaço de memória
 
 	leitura:
-		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r10)
-		cp entrada,aux					; Compara o registrador entrada (r10) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq ler_comando				; Se o registrador entrada (r10) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
+		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
+		breq ler_comando				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
 			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
@@ -109,6 +118,10 @@ escrever_dado:
 				inc r28					; Incrementa a parte baixa do ponteiro Y
 				rjmp leitura			; Continua lendo o próximo valor
 
+; ================================== CRIAÇÃO DA TABELA DE SEQUÊNCIA DE CARACTERES =====================================================
+
+
+; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 total_tabela:
 	ldi r27, 0x03						; O ponteiro x começará a partir do endereço de memória 0x300
     ldi r26, 0x00
@@ -131,8 +144,55 @@ total_tabela:
 
 		rjmp ler_comando
 
+; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
+
+
+
+; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
-    
+    in entrada,portb
+
+	verificaChar2:
+		ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
+		ldi r26, 0x01
+
+		loopVerificar2:
+			ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
+			cpi valor,0x00			; Compara o valor carregado com 0x00 (fim da tabela)
+			breq contar_char		; Se for 0x00, volta para leitura
+			cpi entrada,0x20		; Compara o valor carregado com 0x00 (fim da tabela)
+			breq contar_char		; Se for 0x00, volta para leitura
+			cp valor,entrada		; Compara o valor lido com o valor atual da tabela
+			breq valido2			; Se o valor for válido, salta para a rotina valido
+			inc r26					; Incrementa a parte baixa do ponteiro X
+			rjmp loopVerificar2		; Continua verificando o próximo valor na tabela
+
+		valido2:
+			ldi r27,0x03
+			ldi r26,0x00
+			ldi contador,0x00
+
+			verificarTabela:
+				ld valor,x
+				inc r26
+				cp valor,entrada
+				breq igual
+				cpi valor,0x00
+				breq resultado2
+				rjmp verificarTabela
+
+			igual:
+				inc contador
+				rjmp verificarTabela
+
+			resultado2:
+				sts 0x402,contador
+				out portc,contador				; Apresenta operação na porta de saída
+
+				rjmp ler_comando
+
+; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
+
 
 fim:
-break                 
+break            
