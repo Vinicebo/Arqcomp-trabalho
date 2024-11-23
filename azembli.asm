@@ -5,23 +5,23 @@
 ; Gabriel Corrêa da Silveira - 202401639702 - TA
 
 
-.def entrada = r23
-.def flag = r16
+.def contador = r16
 .def aux = r17
-.def flag2 = r18
+.def aux2 = r18
 .def valor = r19
-.def contador = r20
-.def aux2 = r21
+.def flag = r20
+.def flag2 = r21
 .def flag3 = r22
-.def flag4 = r24
+.def flag4 = r23
+.def entrada = r24
 
-clr r16									; R16 como 0 para configurar os pinos como entrada
+clr aux									; R17 como 0 para configurar os pinos como entrada
 out DDRA, r16							; Configura todos os pinos de PORTA como entrada
 
-clr r16									; R16 como 0 para configurar os pinos como entrada
+clr aux									; R17 como 0 para configurar os pinos como entrada
 out DDRB, r16							; Configura todos os pinos de PORTB como entrada
 
-ldi r16,0xFF							; R16 como FF para configurar os pinos como saída
+ldi aux,0xFF							; R17 como FF para configurar os pinos como saída
 out DDRC, r16							; Configura todos os pinos de PORTC como saída
 
 ; ================================== CRIANDO TABELA ASCII =========================================================================
@@ -244,65 +244,93 @@ criaTabelaF:
 		adiw r26, 0x01                 ; Incrementa o ponteiro X
 		rjmp contarFrequencias
 
+
 	ordenarFrequencias:
-		ldi flag4, 0x0A                  ; Número de elementos (10)
+		ldi flag4, 0x0A                ; Número de elementos (10)
 		clr aux                        ; Flag para monitorar trocas
-		ldi r17, 0x00                  ; Contador de trocas
 
-	bubbleSort:
-		clr aux                        ; Reseta flag de troca
-		ldi r30, 0x00                  ; Parte baixa do ponteiro Z
-		ldi r31, 0x04                  ; Parte alta do ponteiro Z
+		bubbleSort:						   ; Bubble Sort é um método de organização de lista que coloca o maior valor no começo por meio de sucessivas trocas
+			clr aux                        ; Reseta flag de troca
+			ldi r30, 0x00                  ; Parte baixa do ponteiro Z
+			ldi r31, 0x04                  ; Parte alta do ponteiro Z
 
-	loopOrdenacao:
-		ldd valor, z+1                 ; Frequência atual
-		ldd aux2, z+3                  ; Próxima frequência
-		cp valor, aux2                 ; Compara frequências
-		breq checagem
-		brlo troca                     ; Se necessário, troque
+		loopOrdenacao:
+			ldd valor, z+1                 ; Frequência atual
+			ldd aux2, z+3                  ; Próxima frequência
+			cp valor, aux2                 ; Compara frequências
+			breq checagem
+			brlo troca                     ; Se necessário, troque
 
-		continuar:
-		adiw r30, 0x02                 ; Avança para o próximo par
-		cp valor, aux2
-		brne loopOrdenacao             ; Continua o loop
+			continuar:
+			adiw r30, 0x02                 ; Avança para o próximo par
+			cp valor, aux2
+			brne loopOrdenacao             ; Continua o loop
 
-		cpi valor,0x00
-		brne loopOrdenacao
+			cpi valor,0x00
+			brne loopOrdenacao
 
-		; Se nenhuma troca foi feita, terminamos
-		cpi r17,0x00                   ; Verifica se houve troca
-		breq fimOrdenacao              ; Se não houve troca, fim do sort
-		rjmp bubbleSort                ; Caso contrário, repita o sort
+			; Se nenhuma troca foi feita, terminamos
+			cpi aux,0x00                   ; Verifica se houve troca
+			breq fimOrdenacao              ; Se não houve troca, fim do sort
+			rjmp bubbleSort                ; Caso contrário, repita o sort
 
-	troca:
-		ld aux, z                     ; Salva caractere atual
-		ldd aux2, z+2                  ; Salva próximo caractere
-		st z, aux2                    ; Troca caracteres
-		std z+2, aux                   ; Troca caracteres
+		troca:
+			ld aux, z                     ; Salva caractere atual
+			ldd aux2, z+2                  ; Salva próximo caractere
+			st z, aux2                    ; Troca caracteres
+			std z+2, aux                   ; Troca caracteres
 
-		ldd aux, z+1                   ; Salva frequência atual
-		ldd aux2, z+3                  ; Salva próxima frequência
-		std z+1, aux2                  ; Troca frequências
-		std z+3, aux                   ; Troca frequências
+			ldd aux, z+1                   ; Salva frequência atual
+			ldd aux2, z+3                  ; Salva próxima frequência
+			std z+1, aux2                  ; Troca frequências
+			std z+3, aux                   ; Troca frequências
 
-		ldi r17, 0x01                  ; Marca que houve troca
-		adiw r30, 0x02                 ; Avança para o próximo par
-		rjmp loopOrdenacao
+			ldi aux, 0x01                  ; Marca que houve troca
+			adiw r30, 0x02                 ; Avança para o próximo par
+			rjmp loopOrdenacao
 
-	checagem:
-		cpi aux2,0x00
-		breq check1
+		checagem:
+			cpi aux2,0x00
+			breq check1
 		
-		rjmp continuar
+			rjmp continuar
 
-		check1:
-			cpi r17,0x00
-			breq fimOrdenacao
-			rjmp bubbleSort
+			check1:
+				cpi aux,0x00
+				breq fimOrdenacao
+				rjmp bubbleSort
 			
 
 	fimOrdenacao:
-		rjmp ler_comando               ; Volta ao fluxo principal
+		ldi r30, 0x00                  ; Parte baixa do ponteiro Z
+		ldi r31, 0x04                  ; Parte alta do ponteiro Z
+		ldi aux, 0x00				   ; Preparando registrador auxiliar para armazenar 0x00
+
+		limpa:
+			; Iniciar processo de limpa, limpar todos os valores após o décimo caractere da tabela
+			cpi flag4, 0x00
+			breq excluir
+			rjmp proxValor
+
+			excluir:
+				ld valor,z
+				cpi valor,0x00
+				breq terminar
+				st z,aux
+				std z+1,aux
+				adiw r30, 0x02         ; Avança para o próximo par
+				rjmp limpa
+
+			proxValor:
+				dec flag4
+				ld valor,z
+				cpi valor,0x00
+				breq terminar
+				adiw r30, 0x02         ; Avança para o próximo par
+				rjmp limpa
+		
+		terminar:
+			rjmp ler_comando               ; Volta ao fluxo principal
 
 ; ================================== CRIAÇÃO DA TABELA DE CARACTERES FREQUENTES =======================================================
 
