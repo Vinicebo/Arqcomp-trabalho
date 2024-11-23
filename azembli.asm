@@ -1,4 +1,3 @@
-
 ; Mateus de Macedo Coelho Sachinho - 202403184672 - TA
 ; Vinícius da luz - 202402159216 - TA
 ; Eduardo Barros Peruzzo - 202401000833 - TA
@@ -72,6 +71,7 @@ inicio:
 ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como comando para iniciar a escrita de dados
 ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
 ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
+
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
     cp r0,flag							; Compara o registrador r0 com o registrador flag (r16) (0x1c)
@@ -124,25 +124,26 @@ escrever_dado:
 
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 total_tabela:
-	ldi r27, 0x03						
-    ldi r26, 0x00						; O ponteiro x começará a partir do endereço de memória 0x300
-	ldi contador,0x00					; Carrega o registrador contador (r20) com 0x00 (fim da tabela)
+	ldi r27, 0x03						; O ponteiro x começará a partir do endereço de memória 0x300
+    ldi r26, 0x00
+
+	ldi contador,0x00
 
 	loopContar:
 		ld valor,x						; Carrega o valor do endereço atual de X para o registrador valor (r19)
-		inc r26							; Incrementa o valor do registrador r26 em 1
+		inc r26
 		cpi valor,0x00					; Compara o valor do endereço x com 0x00 (fim da tabela), caso seja, termina a contagem
-		breq resultado					; Se o valor do endereço x for igual a 0x00 (fim da tabela), salta para resultado
-		cpi valor,0x20					; Compara o valor do endereço x com 0x20 (espaço em branco)
-		breq loopContar					; Se o valor do endereço x for igual a 0x20 (espaço em branco), salta para loop contar
-		inc contador					; Incrementa o registrador contador (20) em 1
-		rjmp loopContar					; Salta para LoopContar
+		breq resultado
+		cpi valor,0x20
+		breq loopContar					; Compara o valor do endereço x com 0x20 (espaço em branco), caso seja, pula esse valor
+		inc contador
+		rjmp loopContar
 
 	resultado:
-		sts 0x401,contador				; Armazena o valor do registrador contador (r20) no endereço 0x401
-		out portc,contador				; Escreve o valor do registrador contador (r20) na portc
+		sts 0x401,contador
+		out portc,contador				; Apresenta operação na porta de saída
 
-		rjmp ler_comando				; Salta para ler_comando
+		rjmp ler_comando
 
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 
@@ -150,46 +151,46 @@ total_tabela:
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
-    in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
+    in entrada,portb
 
 	verificaChar2:
 		ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
-		ldi r26, 0x01				; O ponteiro x começará a partir do endereço de memória 0x201
+		ldi r26, 0x01
 
 		loopVerificar2:
 			ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
-			cpi valor,0x00			; Compara o registrador valor (r19) com o valor 0x00 (fim da tabela)
-			breq contar_char		; Se o registrador valor (r19) for igual ao valor 0x00 (fim da tabela), salta para conta_chat
-			cpi entrada,0x20		; Compara o valor do registrador entrada (r23) com 0x20 (espaço em branco)
-			breq contar_char		; Se o valor do registrador entrada (r23) for igual a 0x20 (espaço em branco), salta para conta_char
-			cp valor,entrada		; Compara o valor do endereço x com o registrador entrada (r23)
-			breq valido2			; Se o valor do endereço x for igual o registrador entrada (r23), salta para valido2
-			inc r26					; Incrementa a parte baixa do ponteiro X em 1
-			rjmp loopVerificar2		; Salta para loopVerificar2
+			cpi valor,0x00			; Compara o valor carregado com 0x00 (fim da tabela)
+			breq contar_char		; Se for 0x00, volta para leitura
+			cpi entrada,0x20		; Compara o valor carregado com 0x00 (fim da tabela)
+			breq contar_char		; Se for 0x00, volta para leitura
+			cp valor,entrada		; Compara o valor lido com o valor atual da tabela
+			breq valido2			; Se o valor for válido, salta para a rotina valido
+			inc r26					; Incrementa a parte baixa do ponteiro X
+			rjmp loopVerificar2		; Continua verificando o próximo valor na tabela
 
 		valido2:
 			ldi r27,0x03
-			ldi r26,0x00				; O ponteiro x começará a partir do endereço de memória 0x300
-			ldi contador,0x00			; Carrega o contador (r20) com 0x00 (fim da tabela)
+			ldi r26,0x00
+			ldi contador,0x00
 
 			verificarTabela:
-				ld valor,x				; Carrega o valor do endereço atual de X para o registrador valor (r19)
-				inc r26					; Incrementa o valor (r19) em 1
-				cp valor,entrada		; Compara o endereço atual de X com o valor do registrador entrada (r23)
-				breq igual				; Se o valor do endereço x for igual o registrador entrada (r23), salta para igual
-				cpi valor,0x00			; Compara o endereço atual de X com 0x00 (fim da tabela)
-				breq resultado2			; Se o endereço atual de X for igal a 0x00 (fim da tabela), salta para resultado2
-				rjmp verificarTabela	; salta para verificarTabela
+				ld valor,x
+				inc r26
+				cp valor,entrada
+				breq igual
+				cpi valor,0x00
+				breq resultado2
+				rjmp verificarTabela
 
 			igual:
-				inc contador			; Incrementa o registrador (r20) em 1
-				rjmp verificarTabela	; Sallta para verificarTabela
+				inc contador
+				rjmp verificarTabela
 
 			resultado2:
 				sts 0x402,contador
-				out portc,contador		; Apresenta operação na porta de saída
+				out portc,contador				; Apresenta operação na porta de saída
 
-				rjmp ler_comando		; Salta para ler_comando
+				rjmp ler_comando
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 
@@ -197,76 +198,114 @@ contar_char:
 criaTabelaF:
     ldi r26, 0x00                  ; Ponteiro X para 0x300 (parte baixa)
     ldi r27, 0x03                  ; Ponteiro X para 0x300 (parte alta)
+
     ldi r28, 0x03                  ; Ponteiro Y para tabela de frequências (parte baixa)
     ldi r29, 0x04                  ; Ponteiro Y para tabela de frequências (parte alta)
+
     clr contador                   ; Contador geral para frequências (zerado)
     clr aux                        ; Auxiliar para comparações
+
 	contarFrequencias:
 		ld valor, x                    ; Lê o caractere do endereço atual de X
 		cpi valor, 0x00                ; Fim da tabela de sequência?
 		breq ordenarFrequencias        ; Se sim, vá para a ordenação
+
 		; Verifica se é um espaço em branco
 		cpi valor, 0x20
 		breq proximoCaractere
+
 		; Procura o caractere na tabela de frequências
 		ldi r30, 0x00                  ; Ponteiro Z para tabela de frequências (parte baixa)
 		ldi r31, 0x04                  ; Ponteiro Z para tabela de frequências (parte alta)
+
 	procurarTabela:
 		ld aux, z                      ; Lê o caractere atual da tabela de frequências
 		cpi aux, 0x00                  ; Tabela vazia ou fim dela?
 		breq adicionarNovo             ; Adicione o caractere à tabela
+
 		cp aux, valor                  ; Compara com o caractere atual
 		breq incrementarFrequencia     ; Se igual, incremente a frequência
 		adiw r30, 0x02                 ; Avança para o próximo caractere na tabela
 		rjmp procurarTabela
+
 	incrementarFrequencia:
 		ldd aux, z+1                   ; Carrega a frequência
 		inc aux                        ; Incrementa
 		std z+1, aux                   ; Salva a nova frequência
 		rjmp proximoCaractere
+
 	adicionarNovo:
 		st z, valor                    ; Armazena o novo caractere
 		ldi aux, 0x01                  ; Primeira ocorrência
 		std z+1, aux                   ; Armazena a frequência inicial
 		rjmp proximoCaractere
+
 	proximoCaractere:
 		adiw r26, 0x01                 ; Incrementa o ponteiro X
 		rjmp contarFrequencias
+
 	ordenarFrequencias:
 		ldi flag4, 0x0A                  ; Número de elementos (10)
 		clr aux                        ; Flag para monitorar trocas
 		ldi r17, 0x00                  ; Contador de trocas
+
 	bubbleSort:
 		clr aux                        ; Reseta flag de troca
 		ldi r30, 0x00                  ; Parte baixa do ponteiro Z
 		ldi r31, 0x04                  ; Parte alta do ponteiro Z
+
 	loopOrdenacao:
 		ldd valor, z+1                 ; Frequência atual
 		ldd aux2, z+3                  ; Próxima frequência
 		cp valor, aux2                 ; Compara frequências
+		breq checagem
 		brlo troca                     ; Se necessário, troque
+
+		continuar:
 		adiw r30, 0x02                 ; Avança para o próximo par
-		dec flag4                      ; Reduz o contador
+		cp valor, aux2
 		brne loopOrdenacao             ; Continua o loop
+
+		cpi valor,0x00
+		brne loopOrdenacao
+
 		; Se nenhuma troca foi feita, terminamos
 		cpi r17,0x00                   ; Verifica se houve troca
 		breq fimOrdenacao              ; Se não houve troca, fim do sort
 		rjmp bubbleSort                ; Caso contrário, repita o sort
+
 	troca:
 		ld aux, z                     ; Salva caractere atual
 		ldd aux2, z+2                  ; Salva próximo caractere
 		st z, aux2                    ; Troca caracteres
 		std z+2, aux                   ; Troca caracteres
+
 		ldd aux, z+1                   ; Salva frequência atual
 		ldd aux2, z+3                  ; Salva próxima frequência
 		std z+1, aux2                  ; Troca frequências
 		std z+3, aux                   ; Troca frequências
+
 		ldi r17, 0x01                  ; Marca que houve troca
 		adiw r30, 0x02                 ; Avança para o próximo par
 		rjmp loopOrdenacao
+
+	checagem:
+		cpi aux2,0x00
+		breq check1
+		
+		rjmp continuar
+
+		check1:
+			cpi r17,0x00
+			breq fimOrdenacao
+			rjmp bubbleSort
+			
+
 	fimOrdenacao:
 		rjmp ler_comando               ; Volta ao fluxo principal
+
 ; ================================== CRIAÇÃO DA TABELA DE CARACTERES FREQUENTES =======================================================
 
+
 fim:
-break                
+break            
