@@ -14,6 +14,7 @@
 .def flag3 = r22
 .def flag4 = r23
 .def entrada = r24
+.def flag5 = r25
 
 clr aux									; R17 como 0 para configurar os pinos como entrada
 out DDRA, r16							; Configura todos os pinos de PORTA como entrada
@@ -71,6 +72,7 @@ inicio:
 ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r16), usado como comando para iniciar a escrita de dados
 ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r18), usado como comando para calcular o total da tabela
 ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
+ldi flag5,0x1f
 
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
@@ -80,6 +82,8 @@ ler_comando:
     breq total_tabela					; Se o registrador r0 for igual ao registrador flag2 (r18) (0x1d), salta para total_tabela
     cp r0,flag3							; Compara o registrador r0 com o registrador flag3 (r19) (0x1e)
     breq contar_char					; Se o registrador r0 for igual ao registrador flag3 (r19) (0x1e), salta para contar_char
+	cp r0,flag5
+	breq fim1
     rjmp ler_comando					; Se nenhum comando for reconhecido, salta para ler_comando
 
 ; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
@@ -147,7 +151,8 @@ total_tabela:
 
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 
-
+fim1:
+	rjmp fim			; Atalho para o fim, pois o programa não consegue reconhecer o fim devido à distância
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
@@ -215,7 +220,7 @@ criaTabelaF:
 		breq proximoCaractere
 
 		; Procura o caractere na tabela de frequências
-		ldi r30, 0x00                  ; Ponteiro Z para tabela de frequências (parte baixa)
+		ldi r30, 0x03                  ; Ponteiro Z para tabela de frequências (parte baixa)
 		ldi r31, 0x04                  ; Ponteiro Z para tabela de frequências (parte alta)
 
 	procurarTabela:
@@ -251,7 +256,7 @@ criaTabelaF:
 
 		bubbleSort:						   ; Bubble Sort é um método de organização de lista que coloca o maior valor no começo por meio de sucessivas trocas
 			clr aux                        ; Reseta flag de troca
-			ldi r30, 0x00                  ; Parte baixa do ponteiro Z
+			ldi r30, 0x03                  ; Parte baixa do ponteiro Z
 			ldi r31, 0x04                  ; Parte alta do ponteiro Z
 
 		loopOrdenacao:
@@ -302,7 +307,7 @@ criaTabelaF:
 			
 
 	fimOrdenacao:
-		ldi r30, 0x00                  ; Parte baixa do ponteiro Z
+		ldi r30, 0x03                  ; Parte baixa do ponteiro Z
 		ldi r31, 0x04                  ; Parte alta do ponteiro Z
 		ldi aux, 0x00				   ; Preparando registrador auxiliar para armazenar 0x00
 
@@ -330,7 +335,22 @@ criaTabelaF:
 				rjmp limpa
 		
 		terminar:
-			rjmp ler_comando               ; Volta ao fluxo principal
+			; Limpeza terminada, agora o programa deve exibir cada caractere da tabela na porta de saída
+			ldi r31,0x04
+			ldi r30,0x03
+
+			loopExibir:
+				ld valor,z
+				cpi valor,0x00
+				breq parar
+				out portc,valor			; Apresenta o valor na porta de saída
+				ldd valor,z+1
+				out portc,valor			; Apresenta o valor na porta de saída
+				adiw r30, 0x02         ; Avança para o próximo par
+				rjmp loopExibir
+
+			parar:
+				rjmp ler_comando               ; Volta ao fluxo principal
 
 ; ================================== CRIAÇÃO DA TABELA DE CARACTERES FREQUENTES =======================================================
 
