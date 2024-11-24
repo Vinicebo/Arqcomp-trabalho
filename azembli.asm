@@ -100,7 +100,7 @@ escrever_dado:
 	leitura:
 		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
 		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq criaTabelaF				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		breq criaTabelaF1				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
 			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
@@ -164,6 +164,9 @@ total_tabela:
 
 fim1:
 	rjmp fim			; Atalho para o fim, pois o programa não consegue reconhecer o fim devido à distância
+
+criaTabelaF1:
+	rjmp criaTabelaF
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
