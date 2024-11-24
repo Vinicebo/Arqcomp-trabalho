@@ -141,7 +141,18 @@ total_tabela:
 		cpi valor,0x20
 		breq loopContar					; Compara o valor do endereço x com 0x20 (espaço em branco), caso seja, pula esse valor
 		inc contador
+		cpi r26,0xFF
+		breq checarUltimo
 		rjmp loopContar
+
+	checarUltimo:
+		ld valor,x
+		cpi valor,0x00
+		breq resultado
+		cpi valor,0x20
+		breq resultado
+		inc contador
+		rjmp resultado
 
 	resultado:
 		sts 0x401,contador
