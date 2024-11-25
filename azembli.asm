@@ -100,7 +100,7 @@ escrever_dado:
 	leitura:
 		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
 		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq criaTabelaF1				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		breq criaTabelaF1				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), finaliza a tabela e vai para a criação da tabela de frequências
 
 		verificaChar:
 			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
@@ -119,7 +119,7 @@ escrever_dado:
 				st y,entrada			; Armazena o valor lido no endereço apontado por Y
 				out portc,entrada		; Apresenta operação na porta de saída
 				cp r28,aux2				; Compara a parte baixa de Y com 0xFF para verificar o limite de memória
-				breq criaTabelaF		; Se o limite for atingido, retorna para ler_comando
+				breq criaTabelaF		; Se o limite for atingido, finaliza a tabela e salta para a criação da tabela de frequências
 				inc r28					; Incrementa a parte baixa do ponteiro Y
 				rjmp leitura			; Continua lendo o próximo valor
 
