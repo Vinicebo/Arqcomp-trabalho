@@ -73,14 +73,18 @@ inicio:
 ldi flag,0x1c							; Carrega o valor 0x1C no registrador flag (r20), usado como comando para iniciar a escrita de dados
 ldi flag2,0x1d							; Carrega o valor 0x1D no registrador flag2 (r21), usado como comando para calcular o total da tabela
 ldi flag3,0x1e							; Carrega o valor 0x1E no registrador flag3 (r22), usado como comando para contar caracteres
+ldi flag5,0x1f
+
 ler_comando:
     in r0,porta							; Lê um valor da porta A e armazena em r0
     cp r0,flag							; Compara o registrador r0 com o registrador flag (r20) (0x1c)
     breq escrever_dado					; Se o registrador r0 for igual ao registrador flag (r20) (0x1c), salta para escrever_dado
     cp r0,flag2							; Compara o registrador r0 com o registrador flag2 (r21) (0x1d)
     breq total_tabela					; Se o registrador r0 for igual ao registrador flag2 (r21) (0x1d), salta para total_tabela
-    cp r0,flag3							; Compara o registrador r0 com o registrador flag3 (r19) (0x1e)
-    breq contar_char					; Se o registrador r0 for igual ao registrador flag3 (r19) (0x1e), salta para contar_char
+    cp r0,flag3							; Compara o registrador r0 com o registrador flag3 (r22) (0x1e)
+    breq contar_char					; Se o registrador r0 for igual ao registrador flag3 (r22) (0x1e), salta para contar_char
+	cp r0,flag5							; Compara o registrador r0 com o registrador flag5 (r25) (0x1f)
+	breq fim1							; Se o registrador r0 for igual ao registrador flag5 (r25) (0x1f), salta para o fim do código
     rjmp ler_comando					; Se nenhum comando for reconhecido, salta para ler_comando
 
 ; ================================== LEITURA DO COMANDO PELA PORTA DE ENTRADA =====================================================
@@ -97,7 +101,7 @@ escrever_dado:
 	leitura:
 		in entrada,portb				; Lê um valor da porta B e armazena no registrador entrada (r23)
 		cp entrada,aux					; Compara o registrador entrada (r23) com ao registrador aux (r17) (0x1b) (<ESC>)
-		breq criaTabelaF				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
+		breq criaTabelaF1				; Se o registrador entrada (r23) for igual ao registrador aux (r17) (0x1b) (<ESC>), salta para ler_comando
 
 		verificaChar:
 			ldi r27, 0x02				; O ponteiro x começará a partir do endereço de memória 0x201
@@ -116,7 +120,7 @@ escrever_dado:
 				st y,entrada			; Armazena o valor lido no endereço apontado por Y
 				out portc,entrada		; Apresenta operação na porta de saída
 				cp r28,aux2				; Compara a parte baixa de Y com 0xFF para verificar o limite de memória
-				breq criaTabelaF		; Se o limite for atingido, retorna para ler_comando
+				breq criaTabelaF1		; Se o limite for atingido, retorna para ler_comando
 				inc r28					; Incrementa a parte baixa do ponteiro Y
 				rjmp leitura			; Continua lendo o próximo valor
 
@@ -137,7 +141,18 @@ total_tabela:
 		cpi valor,0x20					; Compara o valor do endereço x com 0x20 (espaço em branco)
 		breq loopContar					; Se o valor do endereço x for igual a 0x20 (espaço em branco), salta para loop contar
 		inc contador					; Incrementa o registrador contador (20) em 1
+		cpi r26,0xFF					; Checa se o ponteiro já está na última posição possível da tabela
+		breq checarUltimo				; Se for o último endereço, salta para a checagem final
 		rjmp loopContar					; Salta para LoopContar
+			
+	checarUltimo:						; Na checagem final, checa se o último valor é um caractere ou um espaço em branco, e o armazena se necessário
+		ld valor,x
+		cpi valor,0x00
+		breq resultado
+		cpi valor,0x20
+		breq resultado
+		inc contador
+		rjmp resultado
 
 	resultado:
 		sts 0x401,contador				; Armazena o valor do registrador contador (r16) no endereço 0x401
@@ -147,7 +162,11 @@ total_tabela:
 
 ; ================================== CONTAR TOTAL DE CARACTERES DA TABELA =============================================================
 
+fim1:
+	rjmp fim			; Atalho para o fim, pois o programa não consegue reconhecer o fim devido à distância
 
+criaTabelaF1:
+	rjmp criaTabelaF
 
 ; ================================== CONTAR QUANTOS DE UM CARACTERE TEM NA TABELA =====================================================
 contar_char:
@@ -258,7 +277,7 @@ criaTabelaF:
 			ldd valor, z+1                 ; Frequência atual
 			ldd aux2, z+3                  ; Próxima frequência
 			cp valor, aux2                 ; Compara frequências
-			breq checagem
+			breq checagem					; Se forem iguais, checa o caso
 			brlo troca                     ; Se necessário, troque
 
 			continuar:
@@ -290,13 +309,13 @@ criaTabelaF:
 			rjmp loopOrdenacao
 
 		checagem:
-			cpi aux2,0x00
+			cpi aux2,0x00					; Caso sejam iguais a 0x00, faz o check principal
 			breq check1
 		
-			rjmp continuar
+			rjmp continuar					; Se não forem iguais a 0x00, continua a ordenação
 
 			check1:
-				cpi aux,0x00
+				cpi aux,0x00				; Caso não tenham havido trocas nessa iteração, termina a ordenação, caso haja, volta para o começo
 				breq fimOrdenacao
 				rjmp bubbleSort
 			
